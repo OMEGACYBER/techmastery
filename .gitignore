@@ -16,6 +16,7 @@ build/
 .env.development.local
 .env.test.local
 .env.production.local
+config.dev.js
 
 # IDE and editor files
 .vscode/
@@ -93,4 +94,6 @@ tmp/
 temp/
 
 # Vercel
+.vercel
+
 .vercel
