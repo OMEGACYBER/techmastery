@@ -2,11 +2,20 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Role, Chapter, Lesson, QuizQuestion } from '../types';
 
-if (!process.env.GEMINI_API_KEY) {
-    throw new Error("GEMINI_API_KEY environment variable not set");
-}
+let ai: GoogleGenAI | null = null;
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const initializeAI = () => {
+    if (!process.env.GEMINI_API_KEY) {
+        throw new Error("GEMINI_API_KEY environment variable not set. Please create a .env file with your Gemini API key.");
+    }
+    
+    if (!ai) {
+        console.log("API Key length:", process.env.GEMINI_API_KEY?.length);
+        console.log("API Key starts with:", process.env.GEMINI_API_KEY?.substring(0, 10));
+        ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    }
+    return ai;
+};
 
 export const generateLessonContent = async (role: Role, chapter: Chapter, lesson: Lesson): Promise<string> => {
     const prompt = `
@@ -39,14 +48,15 @@ export const generateLessonContent = async (role: Role, chapter: Chapter, lesson
     `;
 
     try {
-        const response = await ai.models.generateContent({
+        const aiInstance = initializeAI();
+        const response = await aiInstance.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: prompt,
         });
         return response.text;
     } catch (error) {
         console.error("Error generating lesson content:", error);
-        return "Sorry, we couldn't generate the lesson content at this moment. Please try again later.";
+        throw new Error("Sorry, we couldn't generate the lesson content at this moment. Please try again later.");
     }
 };
 
@@ -70,7 +80,8 @@ export const generateChapterQuiz = async (role: Role, chapter: Chapter): Promise
     `;
     
     try {
-        const response = await ai.models.generateContent({
+        const aiInstance = initializeAI();
+        const response = await aiInstance.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: prompt,
             config: {
